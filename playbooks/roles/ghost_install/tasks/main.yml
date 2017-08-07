@@ -1,0 +1,80 @@
+---
+- name: Make ghost group
+  group:
+    name: ghost
+    state: present
+
+- name: Add ghost user
+  user:
+    name: ghost
+    comment: "ghost user"
+    group: ghost
+    password: casper_is_friendly
+
+- name: Update package list
+  apt:
+    update_cache: yes
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+
+- name: Install nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: Install mysql-server
+  apt:
+    name: mysql-server
+    state: present
+
+- name: Install python-mysqldb
+  apt:
+    name: python-mysqldb
+    state: present
+
+- name: Install python-pexpect
+  pip:
+    name: pexpect
+    state: present
+
+- name: Set Mysql Admin User password
+  mysql_user:
+    name: root
+    password: the_friendly_ghost
+
+- name: Get Nodesource repo
+  shell: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash
+
+- name: Install nodejs
+  apt:
+    name: nodejs
+    state: present
+
+- name: Install ghost-cli
+  shell: 'npm i -g ghost-cli'
+
+- file:
+    path: /var/www/ghost
+    state: directory
+    owner: ghost
+    group: ghost
+    mode: 0755
+
+- name: Install ghost
+  expect:
+    chdir: /var/www/ghost
+    command: /usr/bin/ghost install
+    echo: True
+    responses:
+      (?i)blog: "{{ghost.blog_url | default('http://' ~ ansible_default_ipv4.address)}}"
+      (?i)hostname: localhost
+      (?i)username: root
+      (?i)password: the_friendly_ghost
+      (?i)database: my_ghost_db
+      (?i)ghost.*MySQL.*user: Y
+      (?i)nginx: Y
+      (?i)ssl: n
+      (?i)systemd: Y
+      (?i)start.*Ghost: Y
