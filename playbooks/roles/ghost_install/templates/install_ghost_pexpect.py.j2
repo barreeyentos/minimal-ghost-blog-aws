@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+
+import pexpect
+
+child = pexpect.spawn("ghost install")
+child.expect("(?i)blog")
+child.sendline({{ghost.blog_url | default('http://' ~ hostvars.localhost.ghost_blog_ip, true)}})
+child.expect("(?i)mysql hostname:")
+child.sendline("localhost")
+child.expect("(?i)mysql username:")
+child.sendline("root")
+child.expect("(?i)mysql password:")
+child.sendline("the_friendly_ghost")
+child.expect("(?i)database name:")
+child.sendline("my_ghost_db")
+child.expect("(?i)nginx?")
+child.sendline("Y")
+child.expect("(?i)ssl?")
+child.sendline("n")
+child.expect("(?i)mysql user?")
+child.sendline("Y")
+child.expect("(?i)systemd?")
+child.sendline("Y")
+child.expect("(?i)start Ghost?")
+child.sendline("Y")
+child.wait()
+print(child.read())

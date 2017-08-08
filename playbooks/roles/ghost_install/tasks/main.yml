@@ -35,8 +35,8 @@
     state: present
 
 - name: Install python-pexpect
-  pip:
-    name: pexpect
+  apt:
+    name: python-pexpect
     state: present
 
 - name: Set Mysql Admin User password
@@ -62,19 +62,11 @@
     group: ghost
     mode: 0755
 
+- name: Copy over install script
+  template:
+    src: install_ghost_pexpect.py.j2
+    dest: /tmp/install_ghost_pexpect.py
+
 - name: Install ghost
-  expect:
-    chdir: /var/www/ghost
-    command: /usr/bin/ghost install
-    echo: True
-    responses:
-      (?i)blog: "{{ghost.blog_url | default('http://' ~ ansible_default_ipv4.address)}}"
-      (?i)hostname: localhost
-      (?i)username: root
-      (?i)password: the_friendly_ghost
-      (?i)database: my_ghost_db
-      (?i)ghost.*MySQL.*user: Y
-      (?i)nginx: Y
-      (?i)ssl: n
-      (?i)systemd: Y
-      (?i)start.*Ghost: Y
+  shell: 'cd /var/www/ghost && python /tmp/install_ghost_pexpect.py'
+
